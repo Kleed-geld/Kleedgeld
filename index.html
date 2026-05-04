@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#18181A"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Kleedgeld"/>
+<title>Kleedgeld</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8F7F3;--surface:#fff;--surface2:#F4F2EC;
+  --text1:#18181A;--text2:#5C5B54;--text3:#9E9D95;
+  --border:#E6E4DD;--divider:#EDEAE3;
+  --gold:#C8A46A;--gold-lt:#F5EDDA;--gold-dk:#8C6C36;
+  --green:#2E6B4F;--green-lt:#E4F2EB;--green-mid:#A8D4BC;
+  --red:#A84430;--red-lt:#F5E8E4;--red-mid:#DFB0A4;
+  --nav:#18181A;--nav-w:220px;
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;--r99:999px;
+  --sh:0 2px 12px rgba(0,0,0,.08);--shL:0 8px 32px rgba(0,0,0,.13);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── LAYOUT ── */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:var(--nav-w);background:var(--nav);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:200;transition:transform .25s}
+.sidebar-inner{padding:24px 14px;display:flex;flex-direction:column;height:100%}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:20px}
+.brand-ic{width:34px;height:34px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0}
+.brand-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.brand-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+nav.sidenav{display:flex;flex-direction:column;gap:2px;flex:1}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r12);border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,.45);text-align:left;width:100%;transition:background .15s,color .15s;position:relative}
+.nav-btn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.nav-btn.active{background:rgba(200,164,106,.18);color:var(--gold);font-weight:600}
+.nav-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--gold);border-radius:0 2px 2px 0}
+.side-fabs{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px}
+.side-fab{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:var(--r12);border:none;cursor:pointer;font-size:12px;font-weight:600;width:100%;transition:opacity .15s}
+.side-fab:hover{opacity:.85}
+.side-fab.exp{background:var(--red-lt);color:var(--red)}
+.side-fab.inc{background:var(--green-lt);color:var(--green)}
+
+.main{margin-left:var(--nav-w);flex:1;display:flex;flex-direction:column}
+.topbar{display:none;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--nav);position:sticky;top:0;z-index:150}
+.topbar-title{font-size:17px;font-weight:700;color:#fff}
+.topbar-btn{width:34px;height:34px;border-radius:var(--r8);background:rgba(255,255,255,.1);border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center}
+.bottom-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--nav);border-top:1px solid rgba(255,255,255,.07);z-index:150;padding-bottom:max(env(safe-area-inset-bottom),6px)}
+.bottom-bar-inner{display:flex}
+.bb-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 0;border:none;background:transparent;cursor:pointer;font-size:9px;font-weight:600;color:rgba(255,255,255,.3);transition:color .15s;text-transform:uppercase;letter-spacing:.4px}
+.bb-btn.active{color:var(--gold)}
+
+/* ── PAGES ── */
+.page{padding:36px 40px;max-width:860px;animation:pIn .2s ease}
+@keyframes pIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-title{font-size:28px;font-weight:700;letter-spacing:-.6px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+
+/* ── BALANCE CARD ── */
+.bal-card{background:var(--text1);border-radius:20px;padding:30px 34px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:var(--shL)}
+.bal-card::after{content:'';position:absolute;bottom:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(200,164,106,.07)}
+.bal-card.neg{background:linear-gradient(135deg,#4A1508,#7A2010)}
+.bal-eyebrow{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px}
+.bal-num{font-size:clamp(38px,5vw,54px);font-weight:700;letter-spacing:-2px;line-height:1;color:#fff;margin-bottom:22px}
+.bal-rule{height:1px;background:rgba(255,255,255,.09);margin-bottom:18px}
+.bal-stats{display:flex;gap:0}
+.bal-stat{flex:1}
+.bal-stat+.bal-stat{border-left:1px solid rgba(255,255,255,.09);padding-left:20px}
+.bal-stat-lbl{font-size:10px;color:rgba(255,255,255,.28);margin-bottom:4px}
+.bal-stat-val{font-size:14px;font-weight:600}
+.inc-color{color:#80C9A0}
+.exp-color{color:#E8A090}
+
+/* ── ACTION BTNS ── */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.act-btn{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r16);border:1.5px solid;cursor:pointer;background:none;text-align:left;transition:transform .12s,box-shadow .12s;font-family:inherit}
+.act-btn:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.act-btn:active{transform:scale(.99)}
+.act-btn.exp{background:var(--red-lt);border-color:var(--red-mid)}
+.act-btn.inc{background:var(--green-lt);border-color:var(--green-mid)}
+.act-ic{width:32px;height:32px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-lbl{font-size:13px;font-weight:600}
+.act-sub{font-size:11px;opacity:.6;margin-top:1px}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r20);padding:22px}
+.card+.card{margin-top:14px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.sec-link{font-size:12px;color:var(--gold);font-weight:600;border:none;background:none;cursor:pointer;font-family:inherit}
+.sec-link:hover{color:var(--gold-dk)}
+
+/* ── TX ROWS ── */
+.tx-list{display:flex;flex-direction:column}
+.tx-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--divider)}
+.tx-row:last-child{border-bottom:none;padding-bottom:0}
+.tx-row:first-child{padding-top:0}
+.tx-row:hover .del-btn{opacity:1}
+.tx-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.tx-dot.income{background:var(--green-lt)}
+.tx-dot.expense{background:var(--red-lt)}
+.tx-body{flex:1;min-width:0}
+.tx-desc{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.tx-date{font-size:11px;color:var(--text3);margin-top:1px}
+.tx-amt{font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.tx-amt.income{color:var(--green)}
+.tx-amt.expense{color:var(--red)}
+.del-btn{width:26px;height:26px;border-radius:var(--r8);border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);opacity:0;flex-shrink:0;transition:opacity .15s,background .15s}
+.del-btn:hover{background:var(--red-lt);color:var(--red)}
+.auto-tag{display:inline-flex;font-size:9px;font-weight:600;background:var(--gold-lt);color:var(--gold-dk);border-radius:var(--r99);padding:1px 6px;flex-shrink:0}
+
+/* ── FILTER TABS ── */
+.filter-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:var(--r99);border:1.5px solid var(--border);cursor:pointer;font-size:12px;font-weight:500;background:var(--surface);color:var(--text2);transition:all .15s;font-family:inherit}
+.ftab:hover{border-color:var(--text3);color:var(--text1)}
+.ftab.active{background:var(--text1);border-color:var(--text1);color:#fff}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r16);padding:18px;transition:box-shadow .15s,transform .15s}
+.stat-card:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.stat-ic{width:34px;height:34px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:16px}
+.stat-val{font-size:20px;font-weight:700;letter-spacing:-.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* ── CHART ── */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r20);padding:24px;margin-bottom:14px}
+.chart-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.chart-hd-l h3{font-size:14px;font-weight:700}
+.chart-hd-l p{font-size:11px;color:var(--text3);margin-top:2px}
+.chart-hd-r{font-size:18px;font-weight:700;letter-spacing:-.5px;text-align:right}
+.chart-hd-r small{display:block;font-size:10px;font-weight:400;color:var(--text3);margin-top:2px}
+
+/* ── BAR CHART ── */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .6s ease}
+.bar.income{background:linear-gradient(180deg,#80C9A0,var(--green))}
+.bar.expense{background:linear-gradient(180deg,#E8A090,var(--red))}
+.bar-lbl{font-size:9px;color:var(--text3);text-align:center}
+
+/* ── TOP LIST ── */
+.top-list{display:flex;flex-direction:column;gap:12px}
+.top-row{display:flex;align-items:center;gap:10px}
+.top-rank{font-size:11px;font-weight:700;color:var(--text3);width:16px;text-align:center;flex-shrink:0}
+.top-content{flex:1;min-width:0}
+.top-labels{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.top-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-amt{font-size:13px;font-weight:700;color:var(--red);white-space:nowrap;margin-left:8px}
+.top-track{height:3px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.top-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-dk));border-radius:99px;transition:width .7s ease}
+
+/* ── RECURRING ── */
+.rec-list{display:flex;flex-direction:column;gap:10px}
+.rec-card{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r16);padding:14px 16px;transition:opacity .2s,box-shadow .15s}
+.rec-card:hover{box-shadow:var(--sh)}
+.rec-card.off{opacity:.45}
+.rec-ic{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.rec-body{flex:1;min-width:0}
+.rec-name{font-size:13px;font-weight:600}
+.rec-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.rec-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pill{padding:4px 10px;border-radius:var(--r99);border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;transition:all .15s}
+.pill.on{background:var(--green-lt);color:var(--green)}
+.pill.off{background:var(--surface2);color:var(--text3)}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;padding:56px 24px;gap:12px;text-align:center}
+.empty-ic{width:72px;height:72px;border-radius:var(--r16);background:var(--gold-lt);display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:6px}
+.empty-title{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.empty-body{font-size:13px;color:var(--text3);line-height:1.65;max-width:280px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;border-radius:var(--r12);border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:opacity .15s,transform .1s,box-shadow .15s}
+.btn:hover{opacity:.9}
+.btn:active{transform:scale(.98)}
+.btn-gold{background:var(--gold);color:#fff;box-shadow:0 2px 10px rgba(200,164,106,.3)}
+.btn-dark{background:var(--text1);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--text2)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:var(--r8)}
+.btn-full{width:100%;padding:13px}
+.ic-btn{width:32px;height:32px;border-radius:var(--r8);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;transition:background .15s}
+.ic-btn:hover{background:var(--surface2)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:400;padding:16px;animation:oIn .18s ease;backdrop-filter:blur(2px)}
+@keyframes oIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:20px;width:100%;max-width:440px;max-height:92dvh;overflow-y:auto;box-shadow:var(--shL);animation:mIn .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mIn{from{opacity:0;transform:scale(.93) translateY(14px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 22px 0}
+.modal-title{font-size:20px;font-weight:700;letter-spacing:-.4px}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--text3)}
+.inp{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:15px;font-family:inherit;color:var(--text1);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none}
+.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,164,106,.14)}
+.inp::placeholder{color:var(--text3)}
+.inp[type=date]{color-scheme:light}
+.type-seg{display:flex;gap:4px;background:var(--surface2);border-radius:var(--r12);padding:4px}
+.tseg-btn{flex:1;padding:9px;border-radius:var(--r8);border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;color:var(--text3);background:transparent;transition:background .15s,color .15s}
+.tseg-btn.inc.on{background:var(--green-lt);color:var(--green)}
+.tseg-btn.exp.on{background:var(--red-lt);color:var(--red)}
+.amt-row{display:flex;align-items:center;gap:6px;padding-bottom:12px;border-bottom:2px solid var(--border);transition:border-color .15s}
+.amt-row:focus-within{border-bottom-color:var(--gold)}
+.amt-sym{font-size:28px;font-weight:300;flex-shrink:0}
+.amt-sym.inc{color:var(--green)}.amt-sym.exp{color:var(--red)}
+.amt-inp{border:none;outline:none;background:transparent;font-size:clamp(32px,6vw,46px);font-weight:700;letter-spacing:-2px;line-height:1;width:100%;font-family:inherit}
+.amt-inp.inc{color:var(--green)}.amt-inp.exp{color:var(--red)}
+.amt-inp::placeholder{color:var(--text3);opacity:.35}
+.freq-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{padding:6px 13px;border-radius:var(--r99);border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:500;font-family:inherit;color:var(--text2);cursor:pointer;transition:all .15s}
+.fchip:hover{border-color:var(--text3)}
+.fchip.on{background:var(--text1);border-color:var(--text1);color:#fff}
+.err-txt{font-size:12px;color:var(--red);margin-top:-6px}
+
+/* ── MONTH GROUP ── */
+.month-group{margin-bottom:24px}
+.month-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--divider)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text1);color:#fff;padding:10px 18px;border-radius:var(--r99);font-size:13px;font-weight:500;white-space:nowrap;box-shadow:var(--shL);z-index:500;animation:tIn .3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px;pointer-events:none}
+@keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(12px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.toast-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:820px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0;padding-bottom:64px}
+  .topbar{display:flex}
+  .bottom-bar{display:block}
+  .page{padding:18px 16px}
+  .del-btn{opacity:1}
+  .sidebar-veil{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190;animation:oIn .18s ease}
+  .sidebar-veil.on{display:block}
+}
+@media(max-width:440px){
+  .actions{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .bar-lbl{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- SIDEBAR VEIL -->
+  <div class="sidebar-veil" id="veil" onclick="closeSide()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="brand">
+        <div class="brand-ic">K</div>
+        <div>
+          <div class="brand-name">Kleedgeld</div>
+          <div class="brand-sub">Persoonlijk budget</div>
+        </div>
+      </div>
+      <nav class="sidenav" id="sidenav"></nav>
+      <div class="side-fabs">
+        <button class="side-fab exp" onclick="openModal('expense')">− Uitgave toevoegen</button>
+        <button class="side-fab inc" onclick="openModal('income')">+ Bijschrift toevoegen</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar" id="topbar">
+      <button class="topbar-btn" onclick="toggleSide()">☰</button>
+      <span class="topbar-title" id="topbar-title">Overzicht</span>
+      <button class="topbar-btn" onclick="openModal('expense')">+</button>
+    </div>
+    <div id="page-root"></div>
+  </main>
+
+  <!-- BOTTOM BAR -->
+  <nav class="bottom-bar"><div class="bottom-bar-inner" id="bottomnav"></div></nav>
+</div>
+
+<!-- MODALS -->
+<div id="modal-root"></div>
+<!-- TOAST -->
+<div id="toast-root"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STATE & STORAGE
+═══════════════════════════════════════════ */
+const K = { TX:'kg_tx', REC:'kg_rec' };
+let state = { txs:[], recs:[] };
+
+function load(){
+  try{ state.txs  = JSON.parse(localStorage.getItem(K.TX)||'[]'); }catch{state.txs=[];}
+  try{ state.recs = JSON.parse(localStorage.getItem(K.REC)||'[]'); }catch{state.recs=[];}
+}
+function save(){
+  try{ localStorage.setItem(K.TX,  JSON.stringify(state.txs));  }catch{}
+  try{ localStorage.setItem(K.REC, JSON.stringify(state.recs)); }catch{}
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+/* ═══════════════════════════════════════════
+   FORMATTERS
+═══════════════════════════════════════════ */
+const fmt = n => new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'}).format(n);
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d=new Date(iso), now=new Date();
+  const tod=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const yes=new Date(tod); yes.setDate(tod.getDate()-1);
+  const tgt=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  if(+tgt===+tod) return 'Vandaag';
+  if(+tgt===+yes) return 'Gisteren';
+  const o={day:'numeric',month:'long'};
+  if(d.getFullYear()!==now.getFullYear()) o.year='numeric';
+  return d.toLocaleDateString('nl-NL',o);
+}
+const fmtMonthKey = iso => new Date(iso+'T00:00:00').toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
+const fmtShort = iso => new Date(iso).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+function parseAmt(s){ return parseFloat(s.replace(/[^\d,.]/g,'').replace(',','.')); }
+
+const FREQ = {daily:'Dagelijks',weekly:'Wekelijks',biweekly:'Om de 2 weken',monthly:'Maandelijks',yearly:'Jaarlijks'};
+
+/* ═══════════════════════════════════════════
+   CALCULATIONS
+═══════════════════════════════════════════ */
+const calcBal = txs => txs.reduce((s,t)=>t.type==='income'?s+t.amount:s-t.amount, 0);
+function mRange(){
+  const n=new Date();
+  return {start:new Date(n.getFullYear(),n.getMonth(),1), end:new Date(n.getFullYear(),n.getMonth()+1,0,23,59,59)};
+}
+const expMonth = () => { const{start,end}=mRange(); return state.txs.filter(t=>t.type==='expense'&&new Date(t.date)>=start&&new Date(t.date)<=end).reduce((s,t)=>s+t.amount,0); };
+const incMonth = () => { const{start,end}=mRange(); return state.txs.filter(t=>t.type==='income'&&new Date(t.date)>=start&&new Date(t.date)<=end).reduce((s,t)=>s+t.amount,0); };
+const expYear  = () => { const s=new Date(new Date().getFullYear(),0,1); return state.txs.filter(t=>t.type==='expense'&&new Date(t.date)>=s).reduce((s,t)=>s+t.amount,0); };
+
+function getLast8Months(){
+  const res=[];
+  for(let i=7;i>=0;i--){
+    const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+    const start=new Date(d.getFullYear(),d.getMonth(),1);
+    const end=new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59);
+    const inc=state.txs.filter(t=>t.type==='income'&&new Date(t.date)>=start&&new Date(t.date)<=end).reduce((s,t)=>s+t.amount,0);
+    const exp=state.txs.filter(t=>t.type==='expense'&&new Date(t.date)>=start&&new Date(t.date)<=end).reduce((s,t)=>s+t.amount,0);
+    res.push({label:d.toLocaleDateString('nl-NL',{month:'short'}),inc,exp});
+  }
+  return res;
+}
+
+function topExp(n=5){
+  const m=new Map();
+  state.txs.filter(t=>t.type==='expense').forEach(t=>{
+    const k=t.description.trim().toLowerCase();
+    const e=m.get(k)||{total:0,count:0};
+    m.set(k,{total:e.total+t.amount,count:e.count+1});
+  });
+  return [...m.entries()].map(([k,v])=>({label:k.charAt(0).toUpperCase()+k.slice(1),...v}))
+    .sort((a,b)=>b.total-a.total).slice(0,n);
+}
+
+/* ═══════════════════════════════════════════
+   RECURRING SCHEDULER
+═══════════════════════════════════════════ */
+function addFreq(d,f){
+  const r=new Date(d);
+  if(f==='daily')    r.setDate(r.getDate()+1);
+  if(f==='weekly')   r.setDate(r.getDate()+7);
+  if(f==='biweekly') r.setDate(r.getDate()+14);
+  if(f==='monthly')  r.setMonth(r.getMonth()+1);
+  if(f==='yearly')   r.setFullYear(r.getFullYear()+1);
+  return r;
+}
+function sod(d){ const r=new Date(d); r.setHours(0,0,0,0); return r; }
+
+function runScheduler(){
+  const today=sod(new Date());
+  const ids=new Set(state.txs.map(t=>t.id));
+  let changed=false;
+  state.recs.forEach(rec=>{
+    if(!rec.isActive) return;
+    const base=sod(new Date(rec.lastProcessed||rec.startDate));
+    let c=addFreq(base,rec.frequency);
+    let n=0;
+    while(c<=today && n++<500){
+      const id=`rec-${rec.id}-${c.toISOString().slice(0,10)}`;
+      if(!ids.has(id)){
+        ids.add(id);
+        state.txs.unshift({id,type:'income',amount:rec.amount,
+          description:`${rec.description} (automatisch)`,
+          date:c.toISOString(),isRecurring:true,recurringId:rec.id});
+        rec.lastProcessed=c.toISOString();
+        changed=true;
+      }
+      c=addFreq(c,rec.frequency);
+    }
+  });
+  if(changed) save();
+}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+const PAGES=[
+  {id:'dashboard', label:'Overzicht',    icon:'🏠'},
+  {id:'history',   label:'Geschiedenis', icon:'📋'},
+  {id:'insights',  label:'Inzichten',    icon:'📊'},
+  {id:'recurring', label:'Bijschriften', icon:'🔄'},
+];
+let curPage='dashboard';
+
+function renderNav(){
+  const sn=document.getElementById('sidenav');
+  const bn=document.getElementById('bottomnav');
+  sn.innerHTML='';
+  bn.innerHTML='';
+  PAGES.forEach(p=>{
+    const sb=document.createElement('button');
+    sb.className='nav-btn'+(curPage===p.id?' active':'');
+    sb.innerHTML=`<span style="font-size:15px">${p.icon}</span>${p.label}`;
+    sb.onclick=()=>goTo(p.id);
+    sn.appendChild(sb);
+    const bb=document.createElement('button');
+    bb.className='bb-btn'+(curPage===p.id?' active':'');
+    bb.innerHTML=`<span style="font-size:18px">${p.icon}</span>${p.label}`;
+    bb.onclick=()=>goTo(p.id);
+    bn.appendChild(bb);
+  });
+}
+function goTo(id){
+  curPage=id;
+  document.getElementById('topbar-title').textContent=PAGES.find(p=>p.id===id)?.label||'';
+  renderNav();
+  render();
+  closeSide();
+}
+function toggleSide(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('veil').classList.toggle('on'); }
+function closeSide(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('veil').classList.remove('on'); }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+let toastTimer=null;
+function showToast(msg){
+  const r=document.getElementById('toast-root');
+  r.innerHTML=`<div class="toast"><span class="toast-dot"></span>${msg}</div>`;
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>r.innerHTML='',2800);
+}
+
+/* ═══════════════════════════════════════════
+   MODAL: TRANSACTIE
+═══════════════════════════════════════════ */
+let modalType='expense';
+function openModal(type='expense'){
+  modalType=type;
+  const r=document.getElementById('modal-root');
+  const today=new Date().toISOString().slice(0,10);
+  r.innerHTML=`
+  <div class="overlay" id="overlay" onclick="if(event.target.id==='overlay')closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="modal-title" id="mtitle">${type==='income'?'Nieuw bijschrift':'Nieuwe uitgave'}</span>
+        <button class="ic-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="type-seg">
+          <button class="tseg-btn inc ${type==='income'?'on':''}" id="tbinc" onclick="switchType('income')">Bijschrift</button>
+          <button class="tseg-btn exp ${type==='expense'?'on':''}" id="tbexp" onclick="switchType('expense')">Uitgave</button>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:8px">Bedrag</div>
+          <div class="amt-row" id="amt-row">
+            <span class="amt-sym ${type==='income'?'inc':'exp'}" id="amt-sym">€</span>
+            <input class="amt-inp ${type==='income'?'inc':'exp'}" id="amt-inp" placeholder="0,00" inputmode="decimal" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl">Omschrijving</label>
+          <input class="inp" id="desc-inp" placeholder="bijv. Zara, schoenen, H&amp;M..."/>
+        </div>
+        <div class="field">
+          <label class="lbl">Datum</label>
+          <input class="inp" type="date" id="date-inp" value="${today}"/>
+        </div>
+        <p class="err-txt" id="merr" style="display:none"></p>
+        <button class="btn ${type==='income'?'btn-green':'btn-red'} btn-full" id="save-btn" onclick="saveTx()">
+          ${type==='income'?'Bijschrift opslaan':'Uitgave opslaan'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>document.getElementById('amt-inp')?.focus(),80);
+  document.getElementById('amt-inp').addEventListener('keydown',e=>e.key==='Enter'&&saveTx());
+  document.getElementById('desc-inp').addEventListener('keydown',e=>e.key==='Enter'&&saveTx());
+}
+
+function switchType(t){
+  modalType=t;
+  const inc=t==='income';
+  document.getElementById('mtitle').textContent=inc?'Nieuw bijschrift':'Nieuwe uitgave';
+  document.getElementById('tbinc').className='tseg-btn inc'+(inc?' on':'');
+  document.getElementById('tbexp').className='tseg-btn exp'+(!inc?' on':'');
+  document.getElementById('amt-sym').className='amt-sym '+(inc?'inc':'exp');
+  document.getElementById('amt-inp').className='amt-inp '+(inc?'inc':'exp');
+  document.getElementById('save-btn').className='btn '+(inc?'btn-green':'btn-red')+' btn-full';
+  document.getElementById('save-btn').textContent=inc?'Bijschrift opslaan':'Uitgave opslaan';
+}
+
+function saveTx(){
+  const v=parseAmt(document.getElementById('amt-inp').value||'');
+  const desc=(document.getElementById('desc-inp').value||'').trim();
+  const date=document.getElementById('date-inp').value;
+  const err=document.getElementById('merr');
+  if(!v||v<=0){err.textContent='Voer een geldig bedrag in.';err.style.display='block';return;}
+  if(!desc){err.textContent='Voer een omschrijving in.';err.style.display='block';return;}
+  state.txs.unshift({id:uid(),type:modalType,amount:v,description:desc,date:new Date(date+'T12:00:00').toISOString()});
+  save(); closeModal();
+  showToast(`${modalType==='income'?'Bijschrift':'Uitgave'} van ${fmt(v)} opgeslagen ✓`);
+  render();
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* ═══════════════════════════════════════════
+   MODAL: HERHALEND
+═══════════════════════════════════════════ */
+let recFreq='monthly';
+function openRecModal(){
+  const r=document.getElementById('modal-root');
+  r.innerHTML=`
+  <div class="overlay" id="overlay" onclick="if(event.target.id==='overlay')closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="modal-title">Herhalend bijschrift</span>
+        <button class="ic-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="lbl">Bedrag (€)</label>
+          <input class="inp" id="ramt" placeholder="0,00" inputmode="decimal" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label class="lbl">Omschrijving</label>
+          <input class="inp" id="rdesc" placeholder="bijv. Maandelijks kleedgeld"/>
+        </div>
+        <div class="field">
+          <label class="lbl">Frequentie</label>
+          <div class="freq-chips">
+            ${Object.entries(FREQ).map(([k,v])=>`<button class="fchip${recFreq===k?' on':''}" onclick="setFreq('${k}',this)">${v}</button>`).join('')}
+          </div>
+        </div>
+        <p class="err-txt" id="rerr" style="display:none"></p>
+        <button class="btn btn-green btn-full" onclick="saveRec()">Bijschrift toevoegen</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('ramt').focus();
+}
+function setFreq(f,el){
+  recFreq=f;
+  el.closest('.freq-chips').querySelectorAll('.fchip').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function saveRec(){
+  const v=parseAmt(document.getElementById('ramt').value||'');
+  const desc=(document.getElementById('rdesc').value||'').trim();
+  const err=document.getElementById('rerr');
+  if(!v||v<=0){err.textContent='Voer een geldig bedrag in.';err.style.display='block';return;}
+  if(!desc){err.textContent='Voer een omschrijving in.';err.style.display='block';return;}
+  state.recs.push({id:uid(),amount:v,description:desc,frequency:recFreq,startDate:new Date().toISOString(),isActive:true,lastProcessed:null});
+  save(); closeModal();
+  showToast(`Herhalend bijschrift "${desc}" aangemaakt ✓`);
+  runScheduler(); save(); render();
+}
+
+/* ═══════════════════════════════════════════
+   CONFIRM DIALOG
+═══════════════════════════════════════════ */
+function confirm2(title,body,onYes){
+  const r=document.getElementById('modal-root');
+  r.innerHTML=`
+  <div class="overlay" onclick="closeModal()">
+    <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <p style="font-size:18px;font-weight:700;letter-spacing:-.3px">${title}</p>
+        <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-top:6px">${body}</p>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Annuleer</button>
+          <button class="btn btn-red" style="flex:1" id="conf-ok">Verwijder</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('conf-ok').onclick=()=>{ closeModal(); onYes(); };
+}
+
+/* ═══════════════════════════════════════════
+   DELETE HANDLERS
+═══════════════════════════════════════════ */
+function deleteTx(id){
+  const tx=state.txs.find(t=>t.id===id);
+  if(!tx) return;
+  confirm2('Transactie verwijderen?',
+    `"${tx.description}" van ${fmt(tx.amount)} wordt permanent verwijderd.`,
+    ()=>{ state.txs=state.txs.filter(t=>t.id!==id); save(); render(); showToast('Verwijderd'); });
+}
+function deleteRec(id){
+  const r=state.recs.find(r=>r.id===id);
+  if(!r) return;
+  confirm2('Bijschrift verwijderen?',
+    `"${r.description}" wordt permanent verwijderd. Eerdere transacties blijven bewaard.`,
+    ()=>{ state.recs=state.recs.filter(x=>x.id!==id); save(); render(); showToast('Verwijderd'); });
+}
+function toggleRec(id){
+  const r=state.recs.find(r=>r.id===id);
+  if(!r) return;
+  r.isActive=!r.isActive; save(); render();
+}
+
+/* ═══════════════════════════════════════════
+   PAGE: DASHBOARD
+═══════════════════════════════════════════ */
+function renderDashboard(){
+  const bal=calcBal(state.txs);
+  const mE=expMonth(), mI=incMonth();
+  const recent=[...state.txs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  return `
+  <div class="page">
+    <div class="bal-card${bal<0?' neg':''}">
+      <div class="bal-eyebrow">Huidig saldo</div>
+      <div class="bal-num">${fmt(bal)}</div>
+      <div class="bal-rule"></div>
+      <div class="bal-stats">
+        <div class="bal-stat">
+          <div class="bal-stat-lbl">Inkomen deze maand</div>
+          <div class="bal-stat-val inc-color">+${fmt(mI)}</div>
+        </div>
+        <div class="bal-stat">
+          <div class="bal-stat-lbl">Uitgegeven deze maand</div>
+          <div class="bal-stat-val exp-color">−${fmt(mE)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="act-btn exp" onclick="openModal('expense')">
+        <div class="act-ic" style="background:var(--red-mid)"><span style="font-size:16px;color:var(--red)">−</span></div>
+        <div>
+          <div class="act-lbl" style="color:var(--red)">Uitgave toevoegen</div>
+          <div class="act-sub" style="color:var(--red)">Kleding, schoenen...</div>
+        </div>
+      </button>
+      <button class="act-btn inc" onclick="openModal('income')">
+        <div class="act-ic" style="background:var(--green-mid)"><span style="font-size:16px;color:var(--green)">+</span></div>
+        <div>
+          <div class="act-lbl" style="color:var(--green)">Bijschrift toevoegen</div>
+          <div class="act-sub" style="color:var(--green)">Budget, zakgeld...</div>
+        </div>
+      </button>
+    </div>
+
+    ${recent.length?`
+    <div class="sec-hd">
+      <span class="sec-title">Recente transacties</span>
+      <button class="sec-link" onclick="goTo('history')">Bekijk alles →</button>
+    </div>
+    <div class="card">
+      <div class="tx-list">${recent.map(tx=>txRow(tx)).join('')}</div>
+    </div>`:emptyState('👗','Welkom bij Kleedgeld','Voeg je eerste bijschrift toe — bijvoorbeeld je maandelijkse kledingbudget.','openModal(\'income\')','Begin nu')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE: HISTORY
+═══════════════════════════════════════════ */
+let histFilter='all';
+function setHistFilter(f,el){
+  histFilter=f;
+  el.closest('.filter-tabs').querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('history-body').innerHTML=renderHistoryBody();
+}
+function renderHistoryBody(){
+  const filtered=histFilter==='all'?state.txs:state.txs.filter(t=>t.type===histFilter);
+  const sorted=[...filtered].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!sorted.length) return emptyState('🧾','Geen transacties','Er zijn geen transacties die overeenkomen met dit filter.');
+  const map=new Map();
+  sorted.forEach(tx=>{ const k=tx.date.slice(0,7); if(!map.has(k))map.set(k,[]); map.get(k).push(tx); });
+  return [...map.entries()].map(([k,txs])=>`
+    <div class="month-group">
+      <div class="month-lbl">${fmtMonthKey(k+'-01')}</div>
+      <div class="card"><div class="tx-list">${txs.map(tx=>txRow(tx,true)).join('')}</div></div>
+    </div>`).join('');
+}
+function renderHistory(){
+  const total=state.txs.length;
+  return `
+  <div class="page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px">
+      <div>
+        <h1 class="page-title">Geschiedenis</h1>
+        <p class="page-sub">${total} transactie${total!==1?'s':''} totaal</p>
+      </div>
+      <button class="btn btn-dark btn-sm" style="margin-top:6px" onclick="openModal('expense')">+ Toevoegen</button>
+    </div>
+    <div class="filter-tabs">
+      <button class="ftab${histFilter==='all'?' active':''}" onclick="setHistFilter('all',this)">Alles</button>
+      <button class="ftab${histFilter==='income'?' active':''}" onclick="setHistFilter('income',this)">Bijschriften</button>
+      <button class="ftab${histFilter==='expense'?' active':''}" onclick="setHistFilter('expense',this)">Uitgaven</button>
+    </div>
+    <div id="history-body">${renderHistoryBody()}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE: INSIGHTS
+═══════════════════════════════════════════ */
+function renderInsights(){
+  const bal=calcBal(state.txs), mE=expMonth(), yE=expYear();
+  const months=getLast8Months();
+  const maxBar=Math.max(...months.flatMap(m=>[m.inc,m.exp]),1);
+  const top=topExp(); const maxT=top[0]?.total||1;
+  const stats=[
+    {ic:'💰',lbl:'Huidig saldo',val:fmt(bal),color:bal>=0?'var(--green)':'var(--red)'},
+    {ic:'📅',lbl:'Uitgegeven deze maand',val:fmt(mE),color:'var(--red)'},
+    {ic:'📈',lbl:'Uitgegeven dit jaar',val:fmt(yE),color:'var(--gold)'},
+    {ic:'🧾',lbl:'Totaal transacties',val:`${state.txs.length}`,color:'var(--text2)'},
+  ];
+  return `
+  <div class="page">
+    <h1 class="page-title">Inzichten</h1>
+    <p class="page-sub">Overzicht van jouw kleeduitgaven</p>
+
+    <div class="stats-grid">
+      ${stats.map(s=>`
+      <div class="stat-card">
+        <div class="stat-ic" style="background:${s.color}18">${s.ic}</div>
+        <div class="stat-val" style="color:${s.color}">${s.val}</div>
+        <div class="stat-lbl">${s.lbl}</div>
+      </div>`).join('')}
+    </div>
+
+    ${months.some(m=>m.inc||m.exp)?`
+    <div class="chart-card">
+      <div class="chart-hd">
+        <div class="chart-hd-l"><h3>Inkomsten vs Uitgaven</h3><p>Afgelopen 8 maanden</p></div>
+        <div class="chart-hd-r">${fmt(bal)}<small>Huidig saldo</small></div>
+      </div>
+      <div class="bar-chart">
+        ${months.map(m=>`
+        <div class="bar-wrap">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:80px">
+            <div class="bar income" style="flex:1;height:${m.inc?Math.max(4,(m.inc/maxBar)*80):2}px" title="Inkomen: ${fmt(m.inc)}"></div>
+            <div class="bar expense" style="flex:1;height:${m.exp?Math.max(4,(m.exp/maxBar)*80):2}px" title="Uitgaven: ${fmt(m.exp)}"></div>
+          </div>
+          <div class="bar-lbl">${m.label}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--text3)">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--green);margin-right:4px;vertical-align:middle"></span>Inkomen</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--red);margin-right:4px;vertical-align:middle"></span>Uitgaven</span>
+      </div>
+    </div>`:``}
+
+    ${top.length?`
+    <div class="card">
+      <div class="sec-hd" style="margin-bottom:16px"><span class="sec-title">Top uitgaven</span></div>
+      <div class="top-list">
+        ${top.map((item,i)=>`
+        <div class="top-row">
+          <span class="top-rank">${i+1}</span>
+          <div class="top-content">
+            <div class="top-labels">
+              <span class="top-name">${item.label}</span>
+              <span class="top-amt">${fmt(item.total)}</span>
+            </div>
+            <div class="top-track"><div class="top-fill" style="width:${(item.total/maxT)*100}%"></div></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`:``}
+
+    ${state.txs.length===0?emptyState('📊','Nog geen data','Voeg transacties toe om inzichten te zien.'):''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE: RECURRING
+═══════════════════════════════════════════ */
+function renderRecurring(){
+  return `
+  <div class="page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px">
+      <div>
+        <h1 class="page-title">Bijschriften</h1>
+        <p class="page-sub">Automatisch terugkerende inkomsten</p>
+      </div>
+      <button class="btn btn-green btn-sm" style="margin-top:6px" onclick="openRecModal()">+ Toevoegen</button>
+    </div>
+    <p style="font-size:13px;color:var(--text3);line-height:1.7;margin-bottom:20px">
+      Herhalende bijschriften worden automatisch verwerkt zodra je de app opent.
+    </p>
+    ${state.recs.length?`
+    <div class="rec-list">
+      ${state.recs.map(r=>`
+      <div class="rec-card${r.isActive?'':' off'}">
+        <div class="rec-ic" style="background:${r.isActive?'var(--green-lt)':'var(--surface2)'};color:${r.isActive?'var(--green)':'var(--text3)'}">🔄</div>
+        <div class="rec-body">
+          <div class="rec-name">${r.description}</div>
+          <div class="rec-meta">${FREQ[r.frequency]||r.frequency} · ${fmt(r.amount)}</div>
+          ${r.lastProcessed?`<div style="font-size:10px;color:var(--text3);margin-top:2px;font-style:italic">Laatste: ${fmtDate(r.lastProcessed)}</div>`:''}
+        </div>
+        <div class="rec-actions">
+          <button class="pill ${r.isActive?'on':'off'}" onclick="toggleRec('${r.id}')">${r.isActive?'Actief':'Gepauzeerd'}</button>
+          <button class="ic-btn" onclick="deleteRec('${r.id}')" title="Verwijder" style="font-size:13px">🗑</button>
+        </div>
+      </div>`).join('')}
+    </div>`:emptyState('🔄','Geen herhalende bijschriften','Voeg een maandelijks kledingbudget of ander periodiek bijschrift toe.','openRecModal()','Eerste bijschrift toevoegen')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function txRow(tx,showDel=false){
+  const inc=tx.type==='income';
+  return `
+  <div class="tx-row">
+    <div class="tx-dot ${tx.type}">${inc?'↓':'↑'}</div>
+    <div class="tx-body">
+      <div class="tx-desc">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tx.description}</span>
+        ${tx.isRecurring?'<span class="auto-tag">↺ auto</span>':''}
+      </div>
+      <div class="tx-date">${fmtDate(tx.date)}</div>
+    </div>
+    <div class="tx-amt ${tx.type}">${inc?'+':'−'}${fmt(tx.amount)}</div>
+    ${showDel?`<button class="del-btn" onclick="deleteTx('${tx.id}')" title="Verwijder">✕</button>`:''}
+  </div>`;
+}
+function emptyState(ic,title,body,action='',btnLbl=''){
+  return `
+  <div class="empty">
+    <div class="empty-ic">${ic}</div>
+    <p class="empty-title">${title}</p>
+    <p class="empty-body">${body}</p>
+    ${action?`<button class="btn btn-gold" style="margin-top:8px" onclick="${action}">${btnLbl}</button>`:''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function render(){
+  const root=document.getElementById('page-root');
+  if(curPage==='dashboard')  root.innerHTML=renderDashboard();
+  if(curPage==='history')    root.innerHTML=renderHistory();
+  if(curPage==='insights')   root.innerHTML=renderInsights();
+  if(curPage==='recurring')  root.innerHTML=renderRecurring();
+  renderNav();
+}
+
+/* ═══════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='n') openModal('expense');
+  if(e.key==='i') openModal('income');
+});
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+load();
+runScheduler();
+render();
+</script>
+</body>
+</html>
