@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="110" fill="#18181A"/>
+  <!-- K lettermark in gold -->
+  <text x="256" y="340" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif"
+    font-weight="800" font-size="300" fill="#C8A46A">K</text>
+  <!-- subtle shine overlay -->
+  <rect width="512" height="220" rx="0" fill="url(#shine)" opacity="0.06"/>
+  <defs>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </linearGradient>
+  </defs>
+</svg>
